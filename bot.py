@@ -2,9 +2,9 @@ from telegram import ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMa
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 import os, subprocess, urllib.request, urllib.parse, json
 
-from static_ffmpeg import run
-ffmpeg_path, _ = run.get_or_fetch_platform_executables_else_raise()
-os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
+import imageio_ffmpeg
+FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
+os.environ["PATH"] += os.pathsep + os.path.dirname(FFMPEG)
 
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 API_KEY = os.environ.get("YOUTUBE_API_KEY")
@@ -27,10 +27,10 @@ async def search_yt(query):
     return data["items"][0]["id"]["videoId"]
 
 async def dl_audio(link, output):
-    subprocess.run(["yt-dlp", "-x", "--audio-format", "mp3", "--audio-quality", "0", "-o", output, link], check=True)
+    subprocess.run(["yt-dlp", "--ffmpeg-location", FFMPEG, "-x", "--audio-format", "mp3", "--audio-quality", "0", "-o", output, link], check=True)
 
 async def make_video(audio, video):
-    subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i", "color=c=black:s=1280x720", "-i", audio, "-shortest", "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", video], check=True)
+    subprocess.run([FFMPEG, "-y", "-f", "lavfi", "-i", "color=c=black:s=1280x720", "-i", audio, "-shortest", "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", video], check=True)
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
