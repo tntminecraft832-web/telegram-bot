@@ -1,4 +1,3 @@
 python-telegram-bot
 edge-tts
 yt-dlp
-static-ffmpeg
